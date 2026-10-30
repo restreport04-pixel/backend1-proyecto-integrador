@@ -7,8 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "categorias")
-public class Categoria {
+@Table(name = "proveedores")
+public class TipoEspacio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,14 +18,10 @@ public class Categoria {
     // ===================
     // Constructores
     // ===================
-    public Categoria() {
+    public TipoEspacio() {
     }
 
-    public Categoria(String nombre, String descripcion) {
-        this(null, nombre, descripcion);
-    }
-
-    public Categoria(Long id, String nombre, String descripcion) {
+    public TipoEspacio(Long id, String nombre, String descripcion) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -50,16 +46,11 @@ public class Categoria {
         this.nombre = nombre;
     }
 
-    public String getDescripcion() {
-        return descripcion;
+    public String getDescripcion() { 
+        return descripcion; 
     }
 
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    @Override
-    public String toString() {
-        return "Categoria [id=" + id + ", nombre=" + nombre + "]";
+    public void setDescripcion(String descripcion) { 
+        this.descripcion = descripcion; 
     }
 }
