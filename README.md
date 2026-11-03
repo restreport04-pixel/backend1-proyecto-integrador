@@ -28,6 +28,43 @@ A continuación se muestra el modelo entidad-relación de la base de datos:
 * Gestor de paquetes: Maven.
 * Control de versiones: Git y GitHub.
 
+  ## Guía de configuración local
+
+### Pre-requisitos
+* Java (JDK 21 o superior).
+* Git.
+* Una base de datos PostgreSQL (local o en Neon).
+
+### Pasos
+
+1. Clonar el repositorio:
+```bash
+git clone https://github.com/restreport04-pixel/Proyecto_Integrador_b1_2026_2_g2.git
+cd Proyecto_Integrador_b1_2026_2_g2
+```
+
+2. Crear una base de datos vacía en PostgreSQL (por ejemplo `coworking_db`). Las tablas se crean solas al iniciar.
+
+3. Abrir `src/main/resources/application.properties` y poner tus datos de conexión:
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/coworking_db
+spring.datasource.username=tu_usuario
+spring.datasource.password=tu_contrasena
+```
+
+4. Ejecutar la aplicación:
+```bash
+# Windows
+.\mvnw.cmd spring-boot:run
+
+# Mac o Linux
+./mvnw spring-boot:run
+```
+
+5. Abrir el navegador en:
+http://localhost:8085
+
+
 
 
 ## Flujo de trabajo
