@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuario")
 public class Usuario {
 
     @Id
@@ -89,22 +89,22 @@ public class Usuario {
     // Métodos CRUD
     // ===================
     public void guardar(Usuario usuario) {
-        String sql = "INSERT INTO usuarios (nombre, email, telefono) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO usuario (nombre, email, telefono) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, usuario.getNombre(), usuario.getEmail(), usuario.getTelefono());
     }
 
     public void actualizar(Usuario usuario) {
-        String sql = "UPDATE usuarios SET nombre = ?, email = ?, telefono = ? WHERE id = ?";
+        String sql = "UPDATE usuario SET nombre = ?, email = ?, telefono = ? WHERE id = ?";
         jdbcTemplate.update(sql, usuario.getNombre(), usuario.getEmail(), usuario.getTelefono(), usuario.getId());
     }
 
     public void eliminar(Long id) {
-        String sql = "DELETE FROM usuarios WHERE id = ?";
+        String sql = "DELETE FROM usuario WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
 
     public List<Usuario> listarTodos() {
-        String sql = "SELECT id, nombre, email, telefono FROM usuarios ORDER BY id";
+        String sql = "SELECT id, nombre, email, telefono FROM usuario ORDER BY id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Usuario(
             rs.getLong("id"),
             rs.getString("nombre"),
@@ -114,7 +114,7 @@ public class Usuario {
     }
 
     public Usuario obtenerPorId(Long id) {
-        String sql = "SELECT id, nombre, email, telefono FROM usuarios WHERE id = ?";
+        String sql = "SELECT id, nombre, email, telefono FROM usuario WHERE id = ?";
         List<Usuario> resultado = jdbcTemplate.query(sql, (rs, rowNum) -> new Usuario(
             rs.getLong("id"),
             rs.getString("nombre"),
@@ -122,5 +122,10 @@ public class Usuario {
             rs.getString("telefono")
         ), id);
         return resultado.isEmpty() ? null : resultado.get(0);
+    }
+
+    @Override
+    public String toString() {
+        return "Usuario [id=" + id + ", nombre=" + nombre + ", email=" + email + ", telefono=" + telefono + "]";
     }
 }

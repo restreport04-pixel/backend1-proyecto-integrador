@@ -135,4 +135,9 @@ public class Espacio {
         ), id);
         return resultado.isEmpty() ? null : resultado.get(0);
     }
+
+    @Override
+    public String toString() {
+        return "Espacio [id=" + id + ", nombre=" + nombre + ", capacidad=" + capacidad + ", precioHora=" + precioHora + ", tipoEspacioId=" + tipoEspacioId + "]";
+    }
 }

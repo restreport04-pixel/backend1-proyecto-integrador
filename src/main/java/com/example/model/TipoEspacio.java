@@ -111,4 +111,9 @@ public class TipoEspacio {
         ), id);
         return resultado.isEmpty() ? null : resultado.get(0);
     }
+
+    @Override
+    public String toString() {
+        return "TipoEspacio [id=" + id + ", nombre=" + nombre + ", descripcion=" + descripcion + "]";
+    }
 }

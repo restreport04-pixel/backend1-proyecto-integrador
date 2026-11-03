@@ -157,4 +157,9 @@ public class Reserva {
         }, id);
         return resultado.isEmpty() ? null : resultado.get(0);
     }
+
+    @Override
+    public String toString() {
+        return "Reserva [id=" + id + ", usuarioId=" + usuarioId + ", espacioId=" + espacioId + ", fechaInicio=" + fechaInicio + ", fechaFin=" + fechaFin + ", totalPagar=" + totalPagar + "]";
+    }
 }
