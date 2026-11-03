@@ -19,3 +19,21 @@ El proyecto se divide en varias capas para mantener el orden:
 A continuación se muestra el modelo entidad-relación de la base de datos:
 
 ![Diagrama MER](assets/diagrama-mer.png)
+
+## Stack Tecnológico
+* Lenguaje: Java 21.
+* Framework principal: Spring Boot.
+* Interfaz: Vaadin.
+* Base de datos: PostgreSQL.
+* Gestor de paquetes: Maven.
+* Control de versiones: Git y GitHub.
+
+
+
+## Flujo de trabajo
+El equipo usa "Conventional Commits" y trabaja en ramas secundarias antes de unir a la rama `main`.
+
+* feat: nuevas funcionalidades. (Ej: feat(reservas): agregar botón)
+* fix: solucionar errores. (Ej: fix(login): corregir acceso)
+* docs: documentación. (Ej: docs(readme): actualizar texto)
+* style: diseño. (Ej: style(ui): aplicar colores lumo)
