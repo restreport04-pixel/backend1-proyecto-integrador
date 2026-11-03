@@ -37,3 +37,9 @@ El equipo usa "Conventional Commits" y trabaja en ramas secundarias antes de uni
 * fix: solucionar errores. (Ej: fix(login): corregir acceso)
 * docs: documentación. (Ej: docs(readme): actualizar texto)
 * style: diseño. (Ej: style(ui): aplicar colores lumo)
+
+## Licencia y créditos del equipo de trabajo
+Este proyecto se distribuye bajo los términos del archivo LICENSE.md incluido en la raíz del repositorio.
+* Integrante 1: Jacob Vanegas Martinez - Base de datos
+* Integrante 2: Thomas Restrepo Rodriguez - Frontend
+* Integrante 3: Brenda Sofia Rivero Reyes - Documentación
