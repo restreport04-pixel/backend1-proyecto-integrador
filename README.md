@@ -39,8 +39,9 @@ A continuación se muestra el modelo entidad-relación de la base de datos:
 
 1. Clonar el repositorio:
 ```bash
-git clone https://github.com/restreport04-pixel/Proyecto_Integrador_b1_2026_2_g2.git
-cd Proyecto_Integrador_b1_2026_2_g2
+git clone https://github.com/restreport04-pixel/backend1-proyecto-integrador.git
+cd backend1-proyecto-integrador
+
 ```
 
 2. Crear una base de datos vacía en PostgreSQL (por ejemplo `coworking_db`). Las tablas se crean solas al iniciar.
