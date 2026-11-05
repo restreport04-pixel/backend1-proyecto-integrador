@@ -8,7 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@Theme("lumo")
+@Theme
 @StyleSheet("styles.css")
 @Push
 public class Application implements AppShellConfigurator {

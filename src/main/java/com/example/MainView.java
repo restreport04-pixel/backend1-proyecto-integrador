@@ -1,19 +1,21 @@
 package com.example;
 
 // Modelos del proyecto de Coworking
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-
 import com.example.model.Espacio;
 import com.example.model.Reserva;
 import com.example.model.TipoEspacio;
 import com.example.model.Usuario;
+import com.example.service.CrudService;
+import com.example.service.ExcelReportService;
+import com.example.service.PdfReportService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+// Importaciones para descargas de archivos
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -26,22 +28,23 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Gestión Coworking - CRUD")
 @Route("")
 public class MainView extends VerticalLayout {
 
-    private final Usuario usuario;
-    private final TipoEspacio tipoEspacio;
-    private final Espacio espacio;
-    private final Reserva reserva;
+    // 1. Declaración de las 3 dependencias
+    private final CrudService crudService;
+    private final ExcelReportService excelReportService;
+    private final PdfReportService pdfReportService;
 
-    @Autowired
-    public MainView(JdbcTemplate jdbcTemplate) {
-        this.usuario = new Usuario(jdbcTemplate);
-        this.tipoEspacio = new TipoEspacio(jdbcTemplate);
-        this.espacio = new Espacio(jdbcTemplate);
-        this.reserva = new Reserva(jdbcTemplate);
+    // Inyección de dependencias por constructor: Spring suministra CrudService automáticamente
+    public MainView(CrudService crudService,ExcelReportService excelReportService, 
+                    PdfReportService pdfReportService) {
+        this.crudService = crudService;
+        this.excelReportService = excelReportService;
+        this.pdfReportService = pdfReportService;
 
         setSizeFull();
         setPadding(true);
@@ -66,12 +69,13 @@ public class MainView extends VerticalLayout {
         layout.setSizeFull();
 
         Grid<Usuario> grid = new Grid<>(Usuario.class, false);
-        grid.addColumn(Usuario::getId).setHeader("ID").setAutoWidth(true);
-        grid.addColumn(Usuario::getNombre).setHeader("Nombre").setAutoWidth(true);
-        grid.addColumn(Usuario::getEmail).setHeader("Email").setAutoWidth(true);
-        grid.addColumn(Usuario::getTelefono).setHeader("Teléfono").setAutoWidth(true);
+        grid.addColumn(u -> u.getId()).setHeader("ID").setAutoWidth(true);
+        grid.addColumn(u -> u.getNombre()).setHeader("Nombre").setAutoWidth(true);
+        grid.addColumn(u -> u.getEmail()).setHeader("Email").setAutoWidth(true);
+        grid.addColumn(u -> u.getTelefono()).setHeader("Teléfono").setAutoWidth(true);  
 
-        grid.setItems(usuario.listarTodos());
+        Runnable refrescar = () -> grid.setItems(crudService.listarTodos(Usuario.class));
+        refrescar.run();
         grid.setSizeFull();
 
         TextField txtNombre = new TextField("Nombre Completo");
@@ -92,7 +96,7 @@ public class MainView extends VerticalLayout {
 
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
-                Usuario u = usuario.obtenerPorId(event.getValue().getId());
+                Usuario u = crudService.buscarPorId(Usuario.class, event.getValue().getId());
                 if (u != null) {
                     txtNombre.setValue(u.getNombre() != null ? u.getNombre() : "");
                     txtEmail.setValue(u.getEmail() != null ? u.getEmail() : "");
@@ -107,8 +111,8 @@ public class MainView extends VerticalLayout {
                 return;
             }
             Usuario u = new Usuario(null, txtNombre.getValue(), txtEmail.getValue(), txtTelefono.getValue());
-            usuario.guardar(u);
-            grid.setItems(usuario.listarTodos());
+            crudService.guardar(u);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtNombre.clear();
             txtEmail.clear();
@@ -129,8 +133,8 @@ public class MainView extends VerticalLayout {
             seleccionado.setNombre(txtNombre.getValue());
             seleccionado.setEmail(txtEmail.getValue());
             seleccionado.setTelefono(txtTelefono.getValue());
-            usuario.actualizar(seleccionado);
-            grid.setItems(usuario.listarTodos());
+            crudService.actualizar(seleccionado);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtNombre.clear();
             txtEmail.clear();
@@ -141,8 +145,8 @@ public class MainView extends VerticalLayout {
         btnEliminar.addClickListener(e -> {
             Usuario seleccionado = grid.asSingleSelect().getValue();
             if (seleccionado != null) {
-                usuario.eliminar(seleccionado.getId());
-                grid.setItems(usuario.listarTodos());
+                crudService.eliminar(Usuario.class, seleccionado.getId());
+                refrescar.run();
                 grid.asSingleSelect().clear();
                 txtNombre.clear();
                 txtEmail.clear();
@@ -179,12 +183,13 @@ public class MainView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
 
-        Grid<TipoEspacio> grid = new Grid<>(TipoEspacio.class, false);
-        grid.addColumn(TipoEspacio::getId).setHeader("ID").setAutoWidth(true);
-        grid.addColumn(TipoEspacio::getNombre).setHeader("Nombre del Tipo").setAutoWidth(true);
-        grid.addColumn(TipoEspacio::getDescripcion).setHeader("Descripción").setAutoWidth(true);
+       Grid<TipoEspacio> grid = new Grid<>(TipoEspacio.class, false);
+        grid.addColumn(t -> t.getId()).setHeader("ID").setAutoWidth(true);
+        grid.addColumn(t -> t.getNombre()).setHeader("Nombre del Tipo").setAutoWidth(true);
+        grid.addColumn(t -> t.getDescripcion()).setHeader("Descripción").setAutoWidth(true);
 
-        grid.setItems(tipoEspacio.listarTodos());
+        Runnable refrescar = () -> grid.setItems(crudService.listarTodos(TipoEspacio.class));
+        refrescar.run();
         grid.setSizeFull();
 
         TextField txtNombre = new TextField("Nombre del Tipo de Espacio");
@@ -203,7 +208,7 @@ public class MainView extends VerticalLayout {
 
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
-                TipoEspacio t = tipoEspacio.obtenerPorId(event.getValue().getId());
+                TipoEspacio t = crudService.buscarPorId(TipoEspacio.class, event.getValue().getId());
                 if (t != null) {
                     txtNombre.setValue(t.getNombre() != null ? t.getNombre() : "");
                     txtDescripcion.setValue(t.getDescripcion() != null ? t.getDescripcion() : "");
@@ -217,8 +222,8 @@ public class MainView extends VerticalLayout {
                 return;
             }
             TipoEspacio t = new TipoEspacio(null, txtNombre.getValue(), txtDescripcion.getValue());
-            tipoEspacio.guardar(t);
-            grid.setItems(tipoEspacio.listarTodos());
+            crudService.guardar(t);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtNombre.clear();
             txtDescripcion.clear();
@@ -237,8 +242,8 @@ public class MainView extends VerticalLayout {
             }
             seleccionado.setNombre(txtNombre.getValue());
             seleccionado.setDescripcion(txtDescripcion.getValue());
-            tipoEspacio.actualizar(seleccionado);
-            grid.setItems(tipoEspacio.listarTodos());
+            crudService.actualizar(seleccionado);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtNombre.clear();
             txtDescripcion.clear();
@@ -248,8 +253,8 @@ public class MainView extends VerticalLayout {
         btnEliminar.addClickListener(e -> {
             TipoEspacio seleccionado = grid.asSingleSelect().getValue();
             if (seleccionado != null) {
-                tipoEspacio.eliminar(seleccionado.getId());
-                grid.setItems(tipoEspacio.listarTodos());
+                crudService.eliminar(TipoEspacio.class, seleccionado.getId());
+                refrescar.run();
                 grid.asSingleSelect().clear();
                 txtNombre.clear();
                 txtDescripcion.clear();
@@ -285,13 +290,14 @@ public class MainView extends VerticalLayout {
         layout.setSizeFull();
 
         Grid<Espacio> grid = new Grid<>(Espacio.class, false);
-        grid.addColumn(Espacio::getId).setHeader("ID").setAutoWidth(true);
-        grid.addColumn(Espacio::getNombre).setHeader("Nombre").setAutoWidth(true);
-        grid.addColumn(Espacio::getCapacidad).setHeader("Capacidad").setAutoWidth(true);
-        grid.addColumn(Espacio::getPrecioHora).setHeader("Precio/Hora").setAutoWidth(true);
-        grid.addColumn(Espacio::getTipoEspacioId).setHeader("Tipo Espacio ID").setAutoWidth(true);
+        grid.addColumn(e -> e.getId()).setHeader("ID").setAutoWidth(true);
+        grid.addColumn(e -> e.getNombre()).setHeader("Nombre").setAutoWidth(true);
+        grid.addColumn(e -> e.getCapacidad()).setHeader("Capacidad").setAutoWidth(true);
+        grid.addColumn(e -> e.getPrecioHora()).setHeader("Precio/Hora").setAutoWidth(true);
+        grid.addColumn(e -> e.getTipoEspacioId()).setHeader("Tipo Espacio ID").setAutoWidth(true);
 
-        grid.setItems(espacio.listarTodos());
+        Runnable refrescar = () -> grid.setItems(crudService.listarTodos(Espacio.class));
+        refrescar.run();
         grid.setSizeFull();
 
         TextField txtNombre = new TextField("Nombre del Espacio");
@@ -310,7 +316,7 @@ public class MainView extends VerticalLayout {
 
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
-                Espacio esp = espacio.obtenerPorId(event.getValue().getId());
+                Espacio esp = crudService.buscarPorId(Espacio.class, event.getValue().getId());
                 if (esp != null) {
                     txtNombre.setValue(esp.getNombre() != null ? esp.getNombre() : "");
                     txtCapacidad.setValue(esp.getCapacidad());
@@ -327,8 +333,8 @@ public class MainView extends VerticalLayout {
             }
             Long tipoId = txtTipoEspacioId.getValue() != null ? txtTipoEspacioId.getValue().longValue() : null;
             Espacio esp = new Espacio(null, txtNombre.getValue(), txtCapacidad.getValue(), txtPrecio.getValue(), tipoId);
-            espacio.guardar(esp);
-            grid.setItems(espacio.listarTodos());
+            crudService.guardar(esp);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtNombre.clear();
             txtCapacidad.clear();
@@ -352,8 +358,8 @@ public class MainView extends VerticalLayout {
             seleccionado.setCapacidad(txtCapacidad.getValue());
             seleccionado.setPrecioHora(txtPrecio.getValue());
             seleccionado.setTipoEspacioId(tipoId);
-            espacio.actualizar(seleccionado);
-            grid.setItems(espacio.listarTodos());
+            crudService.actualizar(seleccionado);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtNombre.clear();
             txtCapacidad.clear();
@@ -365,8 +371,8 @@ public class MainView extends VerticalLayout {
         btnEliminar.addClickListener(e -> {
             Espacio seleccionado = grid.asSingleSelect().getValue();
             if (seleccionado != null) {
-                espacio.eliminar(seleccionado.getId());
-                grid.setItems(espacio.listarTodos());
+                crudService.eliminar(Espacio.class, seleccionado.getId());
+                refrescar.run();
                 grid.asSingleSelect().clear();
                 txtNombre.clear();
                 txtCapacidad.clear();
@@ -406,14 +412,14 @@ public class MainView extends VerticalLayout {
         layout.setSizeFull();
 
         Grid<Reserva> grid = new Grid<>(Reserva.class, false);
-        grid.addColumn(Reserva::getId).setHeader("ID").setAutoWidth(true);
-        grid.addColumn(Reserva::getUsuarioId).setHeader("Usuario ID").setAutoWidth(true);
-        grid.addColumn(Reserva::getEspacioId).setHeader("Espacio ID").setAutoWidth(true);
-        grid.addColumn(Reserva::getFechaInicio).setHeader("Fecha Inicio").setAutoWidth(true);
-        grid.addColumn(Reserva::getFechaFin).setHeader("Fecha Fin").setAutoWidth(true);
-        grid.addColumn(Reserva::getTotalPagar).setHeader("Total Pagar ($)").setAutoWidth(true);
-
-        grid.setItems(reserva.listarTodos());
+        grid.addColumn(r -> r.getId()).setHeader("ID").setAutoWidth(true);
+        grid.addColumn(r -> r.getUsuarioId()).setHeader("Usuario ID").setAutoWidth(true);
+        grid.addColumn(r -> r.getEspacioId()).setHeader("Espacio ID").setAutoWidth(true);
+        grid.addColumn(r -> r.getFechaInicio()).setHeader("Fecha Inicio").setAutoWidth(true);
+        grid.addColumn(r -> r.getFechaFin()).setHeader("Fecha Fin").setAutoWidth(true);
+        grid.addColumn(r -> r.getTotalPagar()).setHeader("Total Pagar ($)").setAutoWidth(true);
+        Runnable refrescar = () -> grid.setItems(crudService.listarTodos(Reserva.class));
+        refrescar.run();
         grid.setSizeFull();
 
         IntegerField txtUsuarioId = new IntegerField("ID del Usuario");
@@ -431,9 +437,22 @@ public class MainView extends VerticalLayout {
         btnActualizar.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
         btnEliminar.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
+        // BOTONES INTERACTIVOS DE EXPORTACIÓN (EXCEL Y PDF)
+        Button btnExportarExcel = new Button("Exportar Excel (POI)");
+        btnExportarExcel.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        Anchor anchorExcel = new Anchor(generarExcelReservas(), "");
+        anchorExcel.setTarget("_blank");
+        anchorExcel.add(btnExportarExcel);
+
+        Button btnExportarPdf = new Button("Exportar PDF (iText)");
+        btnExportarPdf.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Anchor anchorPdf = new Anchor(generarPdfReservas(), "");
+        anchorPdf.setTarget("_blank");
+        anchorPdf.add(btnExportarPdf);
+
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
-                Reserva r = reserva.obtenerPorId(event.getValue().getId());
+                Reserva r = crudService.buscarPorId(Reserva.class, event.getValue().getId());
                 if (r != null) {
                     txtUsuarioId.setValue(r.getUsuarioId() != null ? r.getUsuarioId().intValue() : null);
                     txtEspacioId.setValue(r.getEspacioId() != null ? r.getEspacioId().intValue() : null);
@@ -453,8 +472,8 @@ public class MainView extends VerticalLayout {
             Long espacioId = txtEspacioId.getValue().longValue();
 
             Reserva r = new Reserva(null, usuarioId, espacioId, txtFechaInicio.getValue(), txtFechaFin.getValue(), txtTotalPagar.getValue());
-            reserva.guardar(r);
-            grid.setItems(reserva.listarTodos());
+            crudService.guardar(r);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtUsuarioId.clear();
             txtEspacioId.clear();
@@ -479,8 +498,8 @@ public class MainView extends VerticalLayout {
             seleccionada.setFechaInicio(txtFechaInicio.getValue());
             seleccionada.setFechaFin(txtFechaFin.getValue());
             seleccionada.setTotalPagar(txtTotalPagar.getValue());
-            reserva.actualizar(seleccionada);
-            grid.setItems(reserva.listarTodos());
+            crudService.actualizar(seleccionada);
+            refrescar.run();
             grid.asSingleSelect().clear();
             txtUsuarioId.clear();
             txtEspacioId.clear();
@@ -493,8 +512,8 @@ public class MainView extends VerticalLayout {
         btnEliminar.addClickListener(e -> {
             Reserva seleccionada = grid.asSingleSelect().getValue();
             if (seleccionada != null) {
-                reserva.eliminar(seleccionada.getId());
-                grid.setItems(reserva.listarTodos());
+                crudService.eliminar(Reserva.class, seleccionada.getId());
+                refrescar.run();
                 grid.asSingleSelect().clear();
                 txtUsuarioId.clear();
                 txtEspacioId.clear();
@@ -516,7 +535,10 @@ public class MainView extends VerticalLayout {
             txtTotalPagar.clear();
         });
 
-        HorizontalLayout acciones = new HorizontalLayout(btnGuardar, btnActualizar, btnEliminar, btnLimpiar);
+        HorizontalLayout acciones = new HorizontalLayout(
+            btnGuardar, btnActualizar, btnEliminar, btnLimpiar, anchorExcel, anchorPdf
+        );
+        acciones.getStyle().set("flex-wrap", "wrap");
 
         FormLayout formulario = new FormLayout();
         formulario.add(txtUsuarioId, txtEspacioId, txtFechaInicio, txtFechaFin, txtTotalPagar, acciones);
@@ -530,4 +552,21 @@ public class MainView extends VerticalLayout {
         return layout;
     }
 
+    // ==========================================
+    // MÉTODOS DE EXPORTACIÓN (DELEGAN A LOS SERVICIOS)
+    // ==========================================
+    private StreamResource generarExcelReservas() {
+        return new StreamResource("Reporte_Reservas.xlsx", () -> 
+            excelReportService.generarReporteReservasExcel(crudService.listarTodos(Reserva.class))
+        );
+    }
+
+    private StreamResource generarPdfReservas() {
+        return new StreamResource("Reporte_Reservas.pdf", () -> 
+            pdfReportService.generarReporteReservasPdf(crudService.listarTodos(Reserva.class))
+        );
+    }
+
 }
+
+
