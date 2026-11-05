@@ -95,49 +95,4 @@ public class Espacio {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ===================
-    // Métodos CRUD
-    // ===================
-    public void guardar(Espacio espacio) {
-        String sql = "INSERT INTO espacio (nombre, capacidad, precio_hora, tipo_espacio_id) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.update(sql, espacio.getNombre(), espacio.getCapacidad(), espacio.getPrecioHora(), espacio.getTipoEspacioId());
-    }
-
-    public void actualizar(Espacio espacio) {
-        String sql = "UPDATE espacio SET nombre = ?, capacidad = ?, precio_hora = ?, tipo_espacio_id = ? WHERE id = ?";
-        jdbcTemplate.update(sql, espacio.getNombre(), espacio.getCapacidad(), espacio.getPrecioHora(), espacio.getTipoEspacioId(), espacio.getId());
-    }
-
-    public void eliminar(Long id) {
-        String sql = "DELETE FROM espacio WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
-
-    public List<Espacio> listarTodos() {
-        String sql = "SELECT id, nombre, capacidad, precio_hora, tipo_espacio_id FROM espacio ORDER BY id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Espacio(
-            rs.getLong("id"),
-            rs.getString("nombre"),
-            rs.getObject("capacidad", Integer.class),
-            rs.getObject("precio_hora", Double.class),
-            rs.getObject("tipo_espacio_id", Long.class)
-        ));
-    }
-
-    public Espacio obtenerPorId(Long id) {
-        String sql = "SELECT id, nombre, capacidad, precio_hora, tipo_espacio_id FROM espacio WHERE id = ?";
-        List<Espacio> resultado = jdbcTemplate.query(sql, (rs, rowNum) -> new Espacio(
-            rs.getLong("id"),
-            rs.getString("nombre"),
-            rs.getObject("capacidad", Integer.class),
-            rs.getObject("precio_hora", Double.class),
-            rs.getObject("tipo_espacio_id", Long.class)
-        ), id);
-        return resultado.isEmpty() ? null : resultado.get(0);
-    }
-
-    @Override
-    public String toString() {
-        return "Espacio [id=" + id + ", nombre=" + nombre + ", capacidad=" + capacidad + ", precioHora=" + precioHora + ", tipoEspacioId=" + tipoEspacioId + "]";
-    }
 }

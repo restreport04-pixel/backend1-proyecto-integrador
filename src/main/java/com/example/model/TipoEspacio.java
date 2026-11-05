@@ -75,45 +75,4 @@ public class TipoEspacio {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ===================
-    // Métodos CRUD
-    // ===================
-    public void guardar(TipoEspacio tipoEspacio) {
-        String sql = "INSERT INTO tipo_espacio (nombre, descripcion) VALUES (?, ?)";
-        jdbcTemplate.update(sql, tipoEspacio.getNombre(), tipoEspacio.getDescripcion());
-    }
-
-    public void actualizar(TipoEspacio tipoEspacio) {
-        String sql = "UPDATE tipo_espacio SET nombre = ?, descripcion = ? WHERE id = ?";
-        jdbcTemplate.update(sql, tipoEspacio.getNombre(), tipoEspacio.getDescripcion(), tipoEspacio.getId());
-    }
-
-    public void eliminar(Long id) {
-        String sql = "DELETE FROM tipo_espacio WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
-
-    public List<TipoEspacio> listarTodos() {
-        String sql = "SELECT id, nombre, descripcion FROM tipo_espacio ORDER BY id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new TipoEspacio(
-            rs.getLong("id"),
-            rs.getString("nombre"),
-            rs.getString("descripcion")
-        ));
-    }
-
-    public TipoEspacio obtenerPorId(Long id) {
-        String sql = "SELECT id, nombre, descripcion FROM tipo_espacio WHERE id = ?";
-        List<TipoEspacio> resultado = jdbcTemplate.query(sql, (rs, rowNum) -> new TipoEspacio(
-            rs.getLong("id"),
-            rs.getString("nombre"),
-            rs.getString("descripcion")
-        ), id);
-        return resultado.isEmpty() ? null : resultado.get(0);
-    }
-
-    @Override
-    public String toString() {
-        return "TipoEspacio [id=" + id + ", nombre=" + nombre + ", descripcion=" + descripcion + "]";
-    }
 }
