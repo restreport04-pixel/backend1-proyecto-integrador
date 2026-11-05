@@ -5,7 +5,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 /**
  * Servicio genérico que interactúa directamente con el ORM Hibernate (vía JPA EntityManager)
  * sin necesidad de crear interfaces de Repositorios para cada entidad.
@@ -13,10 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class CrudService {
-
     @PersistenceContext
     private EntityManager entityManager;
-
     /**
      * Crear / Guardar una nueva entidad en la base de datos
      */
@@ -24,7 +21,6 @@ public class CrudService {
         entityManager.persist(entidad);
         return entidad;
     }
-
     /**
      * Consultar una entidad por su ID
      */
@@ -32,7 +28,6 @@ public class CrudService {
     public <T> T buscarPorId(Class<T> clase, Long id) {
         return entityManager.find(clase, id);
     }
-
     /**
      * Obtener todos los registros de una entidad
      */
@@ -41,14 +36,12 @@ public class CrudService {
         String hql = "SELECT e FROM " + clase.getSimpleName() + " e";
         return entityManager.createQuery(hql, clase).getResultList();
     }
-
     /**
      * Actualizar una entidad existente
      */
     public <T> T actualizar(T entidad) {
         return entityManager.merge(entidad);
     }
-
     /**
      * Eliminar una entidad por su ID
      */
