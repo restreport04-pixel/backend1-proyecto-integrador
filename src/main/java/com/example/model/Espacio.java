@@ -1,7 +1,5 @@
 package com.example.model;
 
-import java.util.List;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import jakarta.persistence.Entity;
